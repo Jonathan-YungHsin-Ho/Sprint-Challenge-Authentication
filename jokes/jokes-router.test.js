@@ -1,9 +1,13 @@
 const request = require('supertest');
 
 const server = require('../api/server');
+const db = require('../database/dbConfig');
 
 describe('GET /api/jokes', () => {
-  // should require authorization
+  beforeEach(async () => {
+    await db('users').truncate();
+  });
+
   it('should require authorization', () => {
     return request(server)
       .get('/api/jokes')
@@ -13,11 +17,11 @@ describe('GET /api/jokes', () => {
   });
 
   it('should return 200 when authorized', async () => {
-    var auth = await request(server)
-      .post('/api/auth/login')
+    const auth = await request(server)
+      .post('/api/auth/register')
       .send({ username: 'Test', password: 'pass' });
 
-    expect(auth.status).toBe(200);
+    expect(auth.status).toBe(201);
 
     const jokes = await request(server)
       .get('/api/jokes')
@@ -27,18 +31,3 @@ describe('GET /api/jokes', () => {
     expect(jokes.type).toMatch(/json/i);
   });
 });
-
-// function loginUser(auth) {
-//   return function(done) {
-//     request(server)
-//       .post('/api/auth/login')
-//       .send({ username: 'Test', password: 'pass' })
-//       .expect(200)
-//       .end(onResponse);
-
-//     function onResponse(err, res) {
-//       auth.token = res.body.token;
-//       return done();
-//     }
-//   };
-// }
